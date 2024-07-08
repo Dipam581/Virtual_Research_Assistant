@@ -1,5 +1,5 @@
 import streamlit as st
-
+from pdfDataExtracter import read_pdf
 
 st.set_page_config(
     page_title="VRA",
@@ -10,7 +10,8 @@ st.sidebar.success("Select a service.")
 
 
 def upload_PDF():
-    st.file_uploader("Choose a PDF file", accept_multiple_files=False)
+    pdf_file = st.file_uploader("Choose a PDF file", accept_multiple_files=False)
+    read_pdf(pdf_file)
 
 
 def upload_DOC():

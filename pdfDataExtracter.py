@@ -1,2 +1,2 @@
 def read_pdf(data):
-    pass
+    print(data)
