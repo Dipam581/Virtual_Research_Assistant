@@ -16,6 +16,9 @@ def upload_PDF():
     response = read_pdf(pdf_file)
     st.write(response)
 
+    if response:
+        st.text_input("Type any queries regarding this content")
+
 
 def upload_DOC():
     pass
