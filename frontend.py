@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 from pdfDataExtracter import read_pdf
 
 st.set_page_config(
@@ -11,7 +12,9 @@ st.sidebar.success("Select a service.")
 
 def upload_PDF():
     pdf_file = st.file_uploader("Choose a PDF file", accept_multiple_files=False)
-    read_pdf(pdf_file)
+    st.spinner('Data is processing...')
+    response = read_pdf(pdf_file)
+    st.write(response)
 
 
 def upload_DOC():

@@ -1,0 +1,9 @@
+fastapi~=0.111.0
+streamlit~=1.36.0
+PyPDF2
+chromadb
+chromadb-client
+langchain
+langchain_pinecone
+pinecone
+transformers
