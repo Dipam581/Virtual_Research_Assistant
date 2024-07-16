@@ -7,3 +7,5 @@ langchain
 langchain_pinecone
 pinecone
 transformers
+langchain_huggingface
+langchain_community
