@@ -1,5 +1,6 @@
 from PyPDF2 import PdfReader
 import re, os
+import streamlit as st
 
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -52,10 +53,12 @@ def embed_document(document):
 
     index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
 
+    st.write(mod_document)
     return mod_document
 
 corpus = []
 def read_pdf(data):
+    print("enter in script")
     if data:
 
         reader = PdfReader(data)
@@ -68,7 +71,7 @@ def read_pdf(data):
 
 def explain_query(query):
     print("query: {}".format(query))
-    print(corpus)
+    # print(corpus)
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     llm_hug = HuggingFaceEndpoint(
@@ -77,6 +80,13 @@ def explain_query(query):
     chain = load_qa_chain(llm_hug, chain_type="stuff")
 
     def retrivequery(query, k=2):
+        documents = chunkData(docs=corpus)
+        embedding = HuggingFaceEmbeddings()
+        pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
+        index_name = "vradocs"
+
+        index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
         matching = index.similarity_search(query=query, k=k)
         return matching
     def retriveAnswer(query):

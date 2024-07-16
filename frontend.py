@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 from pdfDataExtracter import read_pdf, explain_query
 
 st.set_page_config(
@@ -9,13 +8,18 @@ st.set_page_config(
 st.header("Welcome to Virtual Research Assistant! 👋")
 st.sidebar.success("Select Your Assistant.")
 
-pdf_response = ""
+if "pdf_response" not in st.session_state:
+    st.session_state.pdf_response = []
+
 def upload_PDF():
     pdf_file = st.file_uploader("Choose a PDF file", accept_multiple_files=False)
-    with st.spinner('Data is processing...'):
-        pdf_response = read_pdf(pdf_file)
-        st.write(pdf_response)
-
+    if st.button("Upload PDF"):
+        if pdf_file is not None:
+            pdf_data = read_pdf(pdf_file)
+            st.session_state.pdf_response.append(pdf_data)
+            st.success("PDF uploaded successfully!")
+        else:
+            st.warning("Please upload a PDF file")
 
 def upload_DOC():
     pass
@@ -30,10 +34,9 @@ page_names_to_funcs = {
 }
 
 demo_name = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
-page_names_to_funcs[demo_name]()
+call = page_names_to_funcs[demo_name]()
 
-if pdf_response:
-    query = st.text_input("Type any queries regarding this content")
-    if st.button("Explain"):
-        if query:
-            explain_query(query)
+query = st.chat_input("Type any queries regarding this content")
+if query is not None:
+    st.write(st.session_state.pdf_response[0])
+    explain_query(query)
