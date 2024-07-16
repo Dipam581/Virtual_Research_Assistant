@@ -87,6 +87,8 @@ def explain_query(query):
 
         index_name = "vradocs"
         index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
+        # index = pc.Index(index_name)
+        # index.query(top_k=k,vectors = embedding.embed_query(query),include_entities=True)
         matching = index.similarity_search(query=query, k=k)
         return matching
     def retriveAnswer(query):
