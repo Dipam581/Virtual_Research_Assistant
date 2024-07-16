@@ -17,6 +17,8 @@ class DocumentPage:
         self.page_content = page_content
 
 def chunkData(docs,chunk_size=200,chunk_overlap=30):
+    if type(docs) is list:
+        docs = str(docs)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,chunk_overlap=chunk_overlap,length_function=len,is_separator_regex=True)
     doc = text_splitter.create_documents([docs])
     return doc
@@ -71,7 +73,6 @@ def read_pdf(data):
 
 def explain_query(query):
     print("query: {}".format(query))
-    # print(corpus)
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     llm_hug = HuggingFaceEndpoint(
@@ -85,7 +86,6 @@ def explain_query(query):
         pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
         index_name = "vradocs"
-
         index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
         matching = index.similarity_search(query=query, k=k)
         return matching
@@ -93,3 +93,6 @@ def explain_query(query):
         doc_search = retrivequery(query)
         response = chain.run(input_documents=doc_search, question=query)
         return response
+
+    answer = retriveAnswer(query)
+    return answer

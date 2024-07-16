@@ -39,4 +39,5 @@ call = page_names_to_funcs[demo_name]()
 query = st.chat_input("Type any queries regarding this content")
 if query is not None:
     st.write(st.session_state.pdf_response[0])
-    explain_query(query)
+    st.write(explain_query(query))
+
