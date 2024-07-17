@@ -16,7 +16,7 @@ class DocumentPage:
     def __init__(self, page_content):
         self.page_content = page_content
 
-def chunkData(docs,chunk_size=200,chunk_overlap=30):
+def chunkData(docs,chunk_size=1000,chunk_overlap=200):
     if type(docs) is list:
         docs = str(docs)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,chunk_overlap=chunk_overlap,length_function=len,is_separator_regex=True)
@@ -37,6 +37,7 @@ def embed_document(document):
             mod_document += "\n\n"
 
     documents = chunkData(docs=mod_document)
+    print("End of chunking of data")
     embedding = HuggingFaceEmbeddings()
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 

@@ -9,3 +9,6 @@ pinecone
 transformers
 langchain_huggingface
 langchain_community
+cachetools
+jinja2
+uvicorn

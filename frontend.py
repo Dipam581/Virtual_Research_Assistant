@@ -21,23 +21,54 @@ def upload_PDF():
         else:
             st.warning("Please upload a PDF file")
 
-def upload_DOC():
-    pass
+def voice_assistant():
+    prompt = st.chat_input("Say something")
+    if prompt:
+        st.write(f"User has sent the following prompt: {prompt}")
+
+    st.title("Echo Bot")
+
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt:
+        # Display user message in chat message container
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+    response = f"Echo: {prompt}"
+    # Display assistant response in chat message container
+    with st.chat_message("assistant"):
+        st.markdown(response)
+    # Add assistant response to chat history
+    if prompt:
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
 def chat_with_us():
     pass
 
 page_names_to_funcs = {
     "Upload PDF": upload_PDF,
-    "Upload DOCs": upload_DOC,
+    "Voice Assistant": voice_assistant,
     "Chat With Us": chat_with_us,
 }
 
 demo_name = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
 call = page_names_to_funcs[demo_name]()
 
-query = st.chat_input("Type any queries regarding this content")
-if query is not None:
-    st.write(st.session_state.pdf_response[0])
-    st.write(explain_query(query))
+if demo_name == "Upload PDF":
+    query = st.chat_input("Type any queries regarding this content")
+    if query is not None:
+        st.write(st.session_state.pdf_response[0])
+        with st.spinner("Query is being performed"):
+            st.subheader(query)
+            st.write(explain_query(query))
 
