@@ -1,39 +1,57 @@
+import os
+import re
 from PyPDF2 import PdfReader
-import re, os
+from transformers import pipeline
 import streamlit as st
-
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Pinecone
 from langchain_huggingface import HuggingFaceEndpoint
-from langchain_text_splitters import RecursiveCharacterTextSplitter, RecursiveJsonSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
-from transformers import pipeline
 
 
 class DocumentPage:
     def __init__(self, page_content):
         self.page_content = page_content
 
-def chunkData(docs,chunk_size=1000,chunk_overlap=200):
-    if type(docs) is list:
-        docs = str(docs)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,chunk_overlap=chunk_overlap,length_function=len,is_separator_regex=True)
-    doc = text_splitter.create_documents([docs])
-    return doc
+
+def chunkData(docs, chunk_size=1000, chunk_overlap=200):
+    if isinstance(docs, list):
+        docs = " ".join(docs)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        is_separator_regex=True
+    )
+    doc_chunks = text_splitter.create_documents([docs])
+    return doc_chunks
+
+
+def retrivequery(query, k=2):
+    documents = chunkData(docs=corpus)
+    embedding = HuggingFaceEmbeddings()
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
+    index_name = "vradocs"
+    index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
+    matching = index.similarity_search(query=query, k=k)
+    return matching
+
 
 def embed_document(document):
     os.environ['PINECONE_API_KEY'] = "356688b7-fc9b-49ba-9c5f-7162954577cd"
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
-    response = (summarizer(document, max_length=130, min_length=30, do_sample=False))
+    summary = summarizer(document, max_length=130, min_length=30)
 
     mod_document = ""
-    for idx, item in enumerate(response):
+    for idx, item in enumerate(summary):
         summary_text = item.get('summary_text', '')
         mod_document += summary_text
-        if idx < len(response) - 1:
+        if idx < len(summary) - 1:
             mod_document += "\n\n"
 
     documents = chunkData(docs=mod_document)
@@ -56,20 +74,36 @@ def embed_document(document):
 
     index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
 
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    llm_hug = HuggingFaceEndpoint(
+        repo_id=repo_id, max_length=128, temperature=0.6, token=os.environ["HUGGINGFACEHUB_API_TOKEN"]
+    )
+    chain = load_qa_chain(llm_hug, chain_type="stuff")
+
+    def retriveAnswer(query):
+        doc_search = retrivequery(query)
+        response = chain.run(input_documents=doc_search, question=query)
+        return response
+
+    answer = retriveAnswer("Create a one liner Title for this document")
+
+    st.sidebar.header(answer)
     st.write(mod_document)
     return mod_document
 
+
 corpus = []
+
+
 def read_pdf(data):
     print("enter in script")
     if data:
-
         reader = PdfReader(data)
         for page_number, page in enumerate(reader.pages):
-            py_data = re.sub('[^a-zA-Z0-9]', " ", page.extract_text())
-            corpus.append(py_data)
-
-        return embed_document(corpus)
+            page_data = re.sub('[^a-zA-Z0-9]', " ", page.extract_text())
+            corpus.append(page_data)
+        return embed_document(" ".join(corpus))
 
 
 def explain_query(query):
@@ -77,21 +111,10 @@ def explain_query(query):
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
     repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
     llm_hug = HuggingFaceEndpoint(
-        repo_id=repo_id, max_length=128, temperature=0.9, token="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"
+        repo_id=repo_id, max_length=128, temperature=0.9, token=os.environ["HUGGINGFACEHUB_API_TOKEN"]
     )
     chain = load_qa_chain(llm_hug, chain_type="stuff")
 
-    def retrivequery(query, k=2):
-        documents = chunkData(docs=corpus)
-        embedding = HuggingFaceEmbeddings()
-        pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-
-        index_name = "vradocs"
-        index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
-        # index = pc.Index(index_name)
-        # index.query(top_k=k,vectors = embedding.embed_query(query),include_entities=True)
-        matching = index.similarity_search(query=query, k=k)
-        return matching
     def retriveAnswer(query):
         doc_search = retrivequery(query)
         response = chain.run(input_documents=doc_search, question=query)

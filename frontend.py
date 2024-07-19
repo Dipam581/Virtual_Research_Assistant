@@ -6,7 +6,7 @@ st.set_page_config(
     page_icon="📖",
 )
 st.header("Welcome to Virtual Research Assistant! 👋")
-st.sidebar.success("Select Your Assistant.")
+# st.sidebar.success("Select Your Assistant.")
 
 if "pdf_response" not in st.session_state:
     st.session_state.pdf_response = []
@@ -17,9 +17,9 @@ def upload_PDF():
         if pdf_file is not None:
             pdf_data = read_pdf(pdf_file)
             st.session_state.pdf_response.append(pdf_data)
-            st.success("PDF uploaded successfully!")
+            st.toast("PDF uploaded successfully!")
         else:
-            st.warning("Please upload a PDF file")
+            st.toast("Please upload a PDF file")
 
 def voice_assistant():
     prompt = st.chat_input("Say something")
@@ -57,18 +57,33 @@ def chat_with_us():
 
 page_names_to_funcs = {
     "Upload PDF": upload_PDF,
-    "Voice Assistant": voice_assistant,
-    "Chat With Us": chat_with_us,
+    # "Voice Assistant": voice_assistant,
+    # "Chat With Us": chat_with_us,
 }
 
-demo_name = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
-call = page_names_to_funcs[demo_name]()
+# demo_name = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
+st.markdown(
+    """
+    <style>
+    .custom-header {
+        font-weight: bolder;
+        color: #c8d311;
+        font-size: 44px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Use the custom CSS class
+demo_name = st.sidebar.markdown("<div class='custom-header'>Upload PDF</div>", unsafe_allow_html=True)
+call = upload_PDF()
 
 if demo_name == "Upload PDF":
     query = st.chat_input("Type any queries regarding this content")
     if query is not None:
         st.write(st.session_state.pdf_response[0])
+        st.subheader(query)
         with st.spinner("Query is being performed"):
-            st.subheader(query)
             st.write(explain_query(query))
 

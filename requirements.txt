@@ -12,3 +12,4 @@ langchain_community
 cachetools
 jinja2
 uvicorn
+langchainhub
