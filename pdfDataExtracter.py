@@ -3,6 +3,9 @@ import re
 from PyPDF2 import PdfReader
 from transformers import pipeline
 import streamlit as st
+
+from database import insert_doc
+
 from langchain.chains.question_answering import load_qa_chain
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Pinecone
@@ -35,17 +38,24 @@ def retrivequery(query, k=2):
     embedding = HuggingFaceEmbeddings()
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-    index_name = "vradocs"
+    index_name = "first"
     index = PineconeVectorStore.from_documents(documents, index_name=index_name, embedding=embedding)
     matching = index.similarity_search(query=query, k=k)
     return matching
+
+
+indexes = {
+    "first": "first",
+    "second": "second",
+    "third": "third"
+}
 
 
 def embed_document(document):
     os.environ['PINECONE_API_KEY'] = "356688b7-fc9b-49ba-9c5f-7162954577cd"
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
-    summary = summarizer(document, max_length=130, min_length=30)
+    summary = summarizer(document, max_length=100, min_length=50)
 
     mod_document = ""
     for idx, item in enumerate(summary):
@@ -59,7 +69,7 @@ def embed_document(document):
     embedding = HuggingFaceEmbeddings()
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-    index_name = "vradocs"
+    index_name = "first"
 
     if index_name not in pc.list_indexes().names():
         pc.create_index(
@@ -88,9 +98,19 @@ def embed_document(document):
 
     answer = retriveAnswer("Create a one liner Title for this document")
 
-    st.sidebar.header(answer)
-    st.write(mod_document)
-    return mod_document
+    send_data = {
+        "name": answer,
+        "index_name": index_name,
+        "index": index
+    }
+    status = insert_doc(send_data)
+    if status:
+        print("status: ", status)
+        st.sidebar.header(answer)
+        st.write(mod_document)
+        return mod_document
+    else:
+        return False
 
 
 corpus = []

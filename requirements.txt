@@ -13,3 +13,4 @@ cachetools
 jinja2
 uvicorn
 langchainhub
+pymongo
