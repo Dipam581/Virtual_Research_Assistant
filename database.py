@@ -15,7 +15,7 @@ def insert_doc(data):
         our_data = {
             "name": data.name,
             "index_name": data.index_name,
-            "index": data.index
+            "index": str(data.index)
         }
         post_id = db.posts.insert_one(our_data).inserted_id
         print("post_id ",post_id)
@@ -24,5 +24,4 @@ def insert_doc(data):
         return False
 
 
-
-pprint.pprint(db.posts.find_one({"index_name": "first"}))
+pprint.pprint(db.posts.find({}))

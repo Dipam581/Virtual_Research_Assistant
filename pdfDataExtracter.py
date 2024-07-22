@@ -55,7 +55,7 @@ def embed_document(document):
     os.environ['PINECONE_API_KEY'] = "356688b7-fc9b-49ba-9c5f-7162954577cd"
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
-    summary = summarizer(document, max_length=100, min_length=50)
+    summary = summarizer(document, max_length=200, min_length=50)
 
     mod_document = ""
     for idx, item in enumerate(summary):
